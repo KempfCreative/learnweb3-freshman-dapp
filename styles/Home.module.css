@@ -1,0 +1,11 @@
+.main-div {
+  width: 20%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  }
+
+.mood-button {
+  width: 100%;
+  margin: 10px 0px 5px 0px;
+}

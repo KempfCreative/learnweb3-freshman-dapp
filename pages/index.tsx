@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 
 const Home: NextPage = () => {
-  const [mood, setMood] = useState();
-  const [signer, setSigner] = useState();
+  const [localMood, setLocalMood] = useState();
   const [moodContract, setMoodContract] = useState();
+
+  const inputRef = useRef(null);
 
   const MoodContractAddress = "0xB8d6D87b409336c6A262EF1c7c033Ba9BE9E18a6";
   const MoodContractABI = [
@@ -47,15 +48,27 @@ const Home: NextPage = () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum, "ropsten");
     provider.send("eth_requestAccounts", []).then(() => {
       provider.listAccounts().then((accounts) => {
-        setSigner(provider.getSigner(accounts[0]));
+        const providerSigner = provider.getSigner(accounts[0]);
         setMoodContract(new ethers.Contract(
           MoodContractAddress,
           MoodContractABI,
-          signer
+          providerSigner
         ));
       });
     });
   }, []);
+
+  const clickMoodButton = async () => {
+    const moodInputVal = inputRef.current.value;
+    const setMoodPromise = moodContract.setMood(moodInputVal);
+    await setMoodPromise;
+  };
+
+  const clickReturnMoodButton = async () => {
+    const getMoodPromise = moodContract.getMood();
+    const Mood = await getMoodPromise;
+    setLocalMood(Mood);
+  };
 
   return (
     <div className="main-div">
@@ -70,9 +83,12 @@ const Home: NextPage = () => {
         <h1>This is my dApp!</h1>
         <p>Here we can set or get the mood:</p>
         <label htmlFor="mood">Input Mood:</label> <br />
-        {mood}
-        <button className="mood-button" onClick={() => setMood()}>Set Mood</button>
-        <input type="text" id="mood" />
+        <input type="text" id="mood" ref={inputRef} />
+        <button className="mood-button" onClick={clickMoodButton}>Set Mood</button>
+        <button className="mood-button" onClick={clickReturnMoodButton}>Display Mood</button>
+        {localMood ?
+          <h2>{localMood}</h2>
+        : null}
       </main>
     </div>
   );
